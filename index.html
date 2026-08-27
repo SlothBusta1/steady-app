@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#141C17" />
+<title>Steady</title>
+<link rel="manifest" href="/manifest.json" />
+<link rel="apple-touch-icon" href="/icons/icon-192.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap');
+  :root {
+    --bg:#141C17; --surface:#1C271F; --surfaceRaised:#233329;
+    --border:rgba(237,239,230,0.09); --borderStrong:rgba(237,239,230,0.18);
+    --text:#EDEFE6; --textDim:#93A48D; --green:#7FBF4D; --greenDeep:#4E7A2C;
+    --amber:#F2A340; --red:#E0663D;
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; -webkit-tap-highlight-color:transparent; }
+  h1,h2 { font-family:'Space Grotesk',sans-serif; margin:0; }
+  .mono { font-family:'IBM Plex Mono',monospace; }
+  .wrap { max-width:480px; margin:0 auto; padding-bottom:40px; }
+  .header { display:flex; justify-content:space-between; align-items:center; padding:20px 20px 8px; }
+  .dim { color:var(--textDim); }
+  button { font-family:inherit; cursor:pointer; }
+  .iconbtn { background:none; border:1px solid var(--border); border-radius:10px; padding:8px; color:var(--textDim); }
+  .panel { margin:8px 20px; padding:14px 16px; background:var(--surface); border-radius:12px; border:1px solid var(--border); }
+  .setting-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:8px; }
+  .setting-row input, .setting-row select { width:70px; background:var(--surfaceRaised); color:var(--text); border:1px solid var(--border); border-radius:8px; padding:6px 8px; font-size:13px; text-align:right; }
+  .arc-wrap { padding:18px 20px 0; display:flex; justify-content:center; }
+  .streaks { display:flex; gap:10px; padding:14px 20px 4px; overflow-x:auto; }
+  .chip { display:flex; align-items:center; gap:6px; background:var(--surface); border:1px solid var(--border); border-radius:999px; padding:6px 10px; flex-shrink:0; font-size:12px; white-space:nowrap; }
+  .chip b { font-family:'IBM Plex Mono',monospace; }
+  .stats { display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; padding:12px 20px; }
+  .statcard { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px 8px; text-align:center; }
+  .statcard p:first-child { font-size:10px; color:var(--textDim); margin:0 0 4px; text-transform:uppercase; letter-spacing:0.04em; }
+  .statcard p:last-child { font-size:16px; font-weight:600; margin:0; }
+  .waterbtn { width:calc(100% - 40px); margin:6px 20px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:10px; color:var(--text); font-size:13px; font-weight:500; display:flex; align-items:center; justify-content:center; gap:6px; }
+  .section { padding:14px 20px 6px; }
+  .section-head { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+  .primary-btn { background:var(--green); border:none; border-radius:10px; padding:8px 12px; color:#0F1A10; font-size:13px; font-weight:600; display:flex; align-items:center; gap:6px; }
+  .ghost-btn { background:none; border:1px solid var(--borderStrong); border-radius:10px; padding:8px 12px; color:var(--text); font-size:13px; font-weight:500; display:flex; align-items:center; gap:6px; }
+  .meal { display:flex; gap:10px; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:10px; align-items:center; margin-bottom:8px; }
+  .meal img { width:44px; height:44px; border-radius:8px; object-fit:cover; }
+  .meal .name { font-size:13px; font-weight:500; margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+  .meal .meta { font-size:12px; color:var(--textDim); margin:2px 0 0; }
+  .meal button { background:none; border:none; color:var(--textDim); }
+  .workout-card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:14px; }
+  .ex-row { display:flex; gap:8px; font-size:13px; margin-bottom:6px; }
+  .endday { width:calc(100% - 40px); margin:16px 20px 0; background:none; border:1px solid var(--borderStrong); border-radius:10px; padding:12px; color:var(--textDim); font-size:13px; font-weight:500; }
+  .history { display:flex; gap:4px; margin:12px 0; justify-content:center; }
+  .dot { width:8px; height:8px; border-radius:50%; }
+  .error { font-size:12px; color:var(--red); margin:0 0 10px; padding:0 20px; }
+  .spin { animation: spin 1s linear infinite; display:inline-block; }
+  @keyframes spin { from { transform:rotate(0deg); } to { transform:rotate(360deg); } }
+  input[type=file] { display:none; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div>
+      <h1 style="font-size:22px;font-weight:700;letter-spacing:-0.02em;">steady</h1>
+      <p class="dim" id="dateLabel" style="font-size:12px;margin:2px 0 0;"></p>
+    </div>
+    <button class="iconbtn" id="settingsBtn" aria-label="Settings">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+    </button>
+  </div>
+
+  <div class="panel" id="settingsPanel" style="display:none;">
+    <p style="font-size:13px;font-weight:600;margin:0 0 10px;color:var(--textDim);">YOUR GOALS</p>
+    <div class="setting-row"><span class="dim" style="font-size:13px;">Calorie range min</span><input type="number" id="calMin"></div>
+    <div class="setting-row"><span class="dim" style="font-size:13px;">Calorie range max</span><input type="number" id="calMax"></div>
+    <div class="setting-row"><span class="dim" style="font-size:13px;">Protein goal (g)</span><input type="number" id="proteinGoal"></div>
+    <div class="setting-row"><span class="dim" style="font-size:13px;">Produce servings goal</span><input type="number" id="produceGoal"></div>
+    <div class="setting-row"><span class="dim" style="font-size:13px;">Water goal (cups)</span><input type="number" id="waterGoal"></div>
+    <div class="setting-row">
+      <span class="dim" style="font-size:13px;">Workout focus</span>
+      <select id="workoutFocus" style="width:auto;text-align:left;">
+        <option value="general">General fitness</option>
+        <option value="strength">Strength</option>
+        <option value="endurance">Endurance</option>
+        <option value="sport">Sport performance</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="arc-wrap"><svg id="arcSvg" width="220" height="130" viewBox="0 0 220 140"></svg></div>
+
+  <div class="streaks" id="streaks"></div>
+
+  <div class="stats" id="stats"></div>
+
+  <button class="waterbtn" id="waterBtn">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#7FBF4D" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+    Add a cup of water
+  </button>
+
+  <div class="section">
+    <div class="section-head">
+      <h2 style="font-size:15px;font-weight:700;">Meals today</h2>
+      <button class="primary-btn" id="logMealBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0F1A10" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+        <span id="logMealLabel">Log a meal</span>
+      </button>
+      <input type="file" id="photoInput" accept="image/*" capture="environment">
+    </div>
+    <p class="error" id="errorMsg" style="display:none;padding:0;"></p>
+    <p class="dim" id="emptyMeals" style="font-size:13px;">Nothing logged yet. Snap a photo of your next meal.</p>
+    <div id="mealsList"></div>
+  </div>
+
+  <div class="section">
+    <div class="section-head">
+      <h2 style="font-size:15px;font-weight:700;">Workout</h2>
+      <button class="ghost-btn" id="workoutBtn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6.5 6.5l11 11M20.5 3.5l-3 3M3.5 20.5l3-3M2 8l3 3M19 16l3 3M8 2l3 3M13 19l3 3M16 13l3-3"/></svg>
+        <span id="workoutBtnLabel">Suggest one</span>
+      </button>
+    </div>
+    <div id="workoutCard"></div>
+  </div>
+
+  <button class="endday" id="endDayBtn">End day &amp; update streaks</button>
+  <div class="history" id="historyDots"></div>
+</div>
+
+<script>
+const API_BASE = ""; // same-origin serverless functions at /api/analyze and /api/workout
+
+const DEFAULT_GOALS = { calMin: 1800, calMax: 2400, proteinGoal: 90, produceGoal: 3, waterGoal: 6, workoutFocus: "general" };
+const STORAGE_KEY = "steady_state_v1";
+
+function todayStr() { return new Date().toDateString(); }
+
+function loadState() {
+  let raw;
+  try { raw = JSON.parse(localStorage.getItem(STORAGE_KEY)); } catch (e) { raw = null; }
+  const base = {
+    goals: DEFAULT_GOALS, meals: [], water: 0, workoutLoggedToday: false, workout: null,
+    streaks: { logging: 0, range: 0, protein: 0, produce: 0, water: 0, movement: 0 },
+    history: [], lastDate: todayStr(),
+  };
+  if (!raw) return base;
+  const merged = Object.assign({}, base, raw, { goals: Object.assign({}, DEFAULT_GOALS, raw.goals || {}) });
+  if (merged.lastDate !== todayStr()) {
+    rollDay(merged);
+    merged.lastDate = todayStr();
+  }
+  return merged;
+}
+
+function saveState() { localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
+
+function round(n) { return Math.round(n || 0); }
+
+function totals() {
+  return state.meals.reduce((acc, m) => ({
+    calories: acc.calories + m.calories, protein: acc.protein + m.protein, produce: acc.produce + m.produce,
+  }), { calories: 0, protein: 0, produce: 0 });
+}
+
+function rollDay(s) {
+  const t = s.meals.reduce((acc, m) => ({ calories: acc.calories + m.calories, protein: acc.protein + m.protein, produce: acc.produce + m.produce }), { calories: 0, protein: 0, produce: 0 });
+  const hitRange = t.calories >= s.goals.calMin && t.calories <= s.goals.calMax;
+  const hitProtein = t.protein >= s.goals.proteinGoal;
+  const hitProduce = t.produce >= s.goals.produceGoal;
+  const hitWater = s.water >= s.goals.waterGoal;
+  const hitLogging = s.meals.length > 0;
+  const hitMovement = s.workoutLoggedToday;
+  s.streaks = {
+    logging: hitLogging ? s.streaks.logging + 1 : 0,
+    range: hitRange ? s.streaks.range + 1 : 0,
+    protein: hitProtein ? s.streaks.protein + 1 : 0,
+    produce: hitProduce ? s.streaks.produce + 1 : 0,
+    water: hitWater ? s.streaks.water + 1 : 0,
+    movement: hitMovement ? s.streaks.movement + 1 : 0,
+  };
+  s.history = [{ day: s.history.length + 1, calories: t.calories, hitRange }, ...s.history].slice(0, 7);
+  s.meals = []; s.water = 0; s.workoutLoggedToday = false; s.workout = null;
+}
+
+let state = loadState();
+saveState();
+
+function showError(msg) {
+  const el = document.getElementById("errorMsg");
+  el.style.display = msg ? "block" : "none";
+  el.textContent = msg || "";
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const r = new FileReader();
+    r.onload = () => resolve(r.result.split(",")[1]);
+    r.onerror = () => reject(new Error("Could not read file"));
+    r.readAsDataURL(file);
+  });
+}
+
+async function analyzePhoto(file) {
+  const base64 = await fileToBase64(file);
+  const res = await fetch(API_BASE + "/api/analyze", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ imageBase64: base64, mediaType: file.type || "image/jpeg" }),
+  });
+  if (!res.ok) throw new Error("Server error");
+  const result = await res.json();
+  if (result.error) throw new Error(result.error);
+  return { result, base64 };
+}
+
+async function fetchWorkout() {
+  const res = await fetch(API_BASE + "/api/workout", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ focus: state.goals.workoutFocus }),
+  });
+  if (!res.ok) throw new Error("Server error");
+  const result = await res.json();
+  if (result.error) throw new Error(result.error);
+  return result;
+}
+
+function uid() { return Math.random().toString(36).slice(2, 10); }
+
+function renderSettings() {
+  document.getElementById("calMin").value = state.goals.calMin;
+  document.getElementById("calMax").value = state.goals.calMax;
+  document.getElementById("proteinGoal").value = state.goals.proteinGoal;
+  document.getElementById("produceGoal").value = state.goals.produceGoal;
+  document.getElementById("waterGoal").value = state.goals.waterGoal;
+  document.getElementById("workoutFocus").value = state.goals.workoutFocus;
+}
+
+function renderArc() {
+  const t = totals();
+  const min = state.goals.calMin, max = state.goals.calMax;
+  const status = t.calories === 0 ? "empty" : t.calories < min ? "low" : t.calories > max ? "high" : "good";
+  const color = { empty: "#93A48D", low: "#F2A340", high: "#F2A340", good: "#7FBF4D" }[status];
+  const size = 220, strokeWidth = 16, radius = (size - strokeWidth) / 2, cx = size / 2, cy = size / 2;
+  const startAngle = 180, span = 180;
+  const domainMax = max * 1.3;
+  const fillFraction = Math.max(0, Math.min(t.calories, domainMax)) / domainMax;
+  const minFraction = min / domainMax, maxFraction = max / domainMax;
+  function polar(angleDeg, r) { const rad = (angleDeg - 90) * Math.PI / 180; return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) }; }
+  function arcPath(f0, f1, r) {
+    const a1 = startAngle + span * f0, a2 = startAngle + span * f1;
+    const p1 = polar(a1, r), p2 = polar(a2, r);
+    const large = a2 - a1 > 180 ? 1 : 0;
+    return `M ${p1.x} ${p1.y} A ${r} ${r} 0 ${large} 1 ${p2.x} ${p2.y}`;
+  }
+  const svg = document.getElementById("arcSvg");
+  svg.innerHTML = `
+    <path d="${arcPath(0,1,radius)}" fill="none" stroke="#233329" stroke-width="${strokeWidth}" stroke-linecap="round"/>
+    <path d="${arcPath(minFraction,maxFraction,radius)}" fill="none" stroke="#4E7A2C" stroke-width="${strokeWidth}" opacity="0.6"/>
+    <path d="${arcPath(0,fillFraction,radius)}" fill="none" stroke="${color}" stroke-width="${strokeWidth}" stroke-linecap="round"/>
+    <text x="${cx}" y="${cy-6}" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="30" font-weight="500" fill="#EDEFE6">${round(t.calories)}</text>
+    <text x="${cx}" y="${cy+16}" text-anchor="middle" font-family="Inter,sans-serif" font-size="12" fill="#93A48D">cal &middot; range ${min}&ndash;${max}</text>
+  `;
+}
+
+function renderStreaks() {
+  const icons = {
+    logging: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F2A340" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>',
+    range: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F2A340" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>',
+    protein: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F2A340" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>',
+    produce: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F2A340" stroke-width="2"><path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10z"/><path d="M2 21c0-3 1.85-5.36 5.08-6C9.5 14.52 12 13 13 12"/></svg>',
+    water: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F2A340" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>',
+    movement: '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#F2A340" stroke-width="2"><path d="M6.5 6.5l11 11M20.5 3.5l-3 3M3.5 20.5l3-3M2 8l3 3M19 16l3 3M8 2l3 3M13 19l3 3M16 13l3-3"/></svg>',
+  };
+  const labels = { logging: "Logging", range: "Range", protein: "Protein", produce: "Produce", water: "Water", movement: "Move" };
+  document.getElementById("streaks").innerHTML = Object.keys(labels).map(k =>
+    `<div class="chip">${icons[k]}<span class="dim">${labels[k]}</span><b>${state.streaks[k]}</b></div>`
+  ).join("");
+}
+
+function renderStats() {
+  const t = totals();
+  const cards = [
+    ["Protein", `${t.protein}g`, `/ ${state.goals.proteinGoal}g`],
+    ["Produce", `${t.produce}`, `/ ${state.goals.produceGoal} srv`],
+    ["Water", `${state.water}`, `/ ${state.goals.waterGoal} cups`],
+  ];
+  document.getElementById("stats").innerHTML = cards.map(([label, val, goal]) =>
+    `<div class="statcard"><p>${label}</p><p class="mono">${val} <span class="dim" style="font-size:11px;font-weight:400;">${goal}</span></p></div>`
+  ).join("");
+}
+
+function renderMeals() {
+  document.getElementById("emptyMeals").style.display = state.meals.length ? "none" : "block";
+  document.getElementById("mealsList").innerHTML = state.meals.map(m => `
+    <div class="meal">
+      <img src="${m.thumb}" alt="">
+      <div style="flex:1;min-width:0;">
+        <p class="name">${(m.items || []).map(i => i.name).join(", ") || "Meal"}</p>
+        <p class="meta mono">${m.calories} cal &middot; ${m.protein}g protein &middot; ${m.time}</p>
+      </div>
+      <button data-id="${m.id}" class="remove-meal" aria-label="Remove meal">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+      </button>
+    </div>
+  `).join("");
+  document.querySelectorAll(".remove-meal").forEach(btn => {
+    btn.onclick = () => { state.meals = state.meals.filter(m => m.id !== btn.dataset.id); saveState(); renderAll(); };
+  });
+}
+
+function renderWorkout() {
+  const el = document.getElementById("workoutCard");
+  if (!state.workout) { el.innerHTML = ""; return; }
+  const w = state.workout;
+  el.innerHTML = `
+    <div class="workout-card">
+      <p style="font-size:14px;font-weight:600;margin:0 0 2px;">${w.title}</p>
+      <p class="dim" style="font-size:12px;margin:0 0 10px;">${w.focus} &middot; ~${w.est_duration_min} min</p>
+      <div style="margin-bottom:10px;">
+        ${(w.exercises || []).map(ex => `<div class="ex-row"><span style="color:#7FBF4D;">&rsaquo;</span><span><strong style="font-weight:500;">${ex.name}</strong> &mdash; ${ex.detail}</span></div>`).join("")}
+      </div>
+      ${state.workoutLoggedToday
+        ? `<p style="font-size:13px;color:#7FBF4D;margin:0;font-weight:500;">Done for today &#10003;</p>`
+        : `<button id="markDoneBtn" class="primary-btn" style="width:100%;justify-content:center;">Mark as done</button>`}
+    </div>
+  `;
+  const markBtn = document.getElementById("markDoneBtn");
+  if (markBtn) markBtn.onclick = () => { state.workoutLoggedToday = true; saveState(); renderWorkout(); renderStreaksPreview(); };
+}
+
+function renderStreaksPreview() { /* placeholder for future live preview */ }
+
+function renderHistory() {
+  document.getElementById("historyDots").innerHTML = state.history.slice().reverse().map(h =>
+    `<div class="dot" style="background:${h.hitRange ? '#7FBF4D' : '#F2A340'}" title="Day ${h.day}: ${h.calories} cal"></div>`
+  ).join("");
+}
+
+function renderAll() {
+  document.getElementById("dateLabel").textContent = new Date().toLocaleDateString([], { weekday: "long", month: "short", day: "numeric" });
+  renderSettings(); renderArc(); renderStreaks(); renderStats(); renderMeals(); renderWorkout(); renderHistory();
+}
+
+document.getElementById("settingsBtn").onclick = () => {
+  const p = document.getElementById("settingsPanel");
+  p.style.display = p.style.display === "none" ? "block" : "none";
+};
+
+["calMin", "calMax", "proteinGoal", "produceGoal", "waterGoal"].forEach(id => {
+  document.getElementById(id).addEventListener("change", (e) => {
+    state.goals[id] = Number(e.target.value) || 0; saveState(); renderAll();
+  });
+});
+document.getElementById("workoutFocus").addEventListener("change", (e) => {
+  state.goals.workoutFocus = e.target.value; saveState();
+});
+
+document.getElementById("waterBtn").onclick = () => { state.water += 1; saveState(); renderStats(); };
+
+document.getElementById("logMealBtn").onclick = () => document.getElementById("photoInput").click();
+
+document.getElementById("photoInput").addEventListener("change", async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  showError("");
+  const btn = document.getElementById("logMealBtn");
+  const label = document.getElementById("logMealLabel");
+  btn.disabled = true; label.textContent = "Reading photo..."; btn.style.opacity = "0.7";
+  try {
+    const { result, base64 } = await analyzePhoto(file);
+    state.meals.unshift({
+      id: uid(),
+      time: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
+      items: result.items || [],
+      calories: round(result.total_calories),
+      protein: round(result.total_protein_g),
+      produce: result.produce_servings || 0,
+      thumb: `data:${file.type};base64,${base64}`,
+    });
+    saveState(); renderAll();
+  } catch (err) {
+    showError("Couldn't read that photo. Try again, or a clearer shot.");
+  } finally {
+    btn.disabled = false; label.textContent = "Log a meal"; btn.style.opacity = "1";
+    e.target.value = "";
+  }
+});
+
+document.getElementById("workoutBtn").onclick = async () => {
+  showError("");
+  const label = document.getElementById("workoutBtnLabel");
+  label.textContent = "Thinking...";
+  try {
+    state.workout = await fetchWorkout();
+    saveState(); renderWorkout();
+  } catch (err) {
+    showError("Couldn't generate a workout right now. Try again in a bit.");
+  } finally {
+    label.textContent = "Suggest one";
+  }
+};
+
+document.getElementById("endDayBtn").onclick = () => {
+  rollDay(state); state.lastDate = todayStr(); saveState(); renderAll();
+};
+
+renderAll();
+
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js").catch(() => {}));
+}
+</script>
+</body>
+</html>

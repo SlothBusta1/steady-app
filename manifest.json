@@ -1,0 +1,14 @@
+{
+  "name": "Steady",
+  "short_name": "Steady",
+  "description": "Balanced food and fitness tracking, no calorie-punishment math.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#141C17",
+  "theme_color": "#141C17",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
