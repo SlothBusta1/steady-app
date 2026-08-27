@@ -18,7 +18,8 @@
     --amber:#F2A340; --red:#E0663D;
   }
   * { box-sizing: border-box; }
-  body { margin:0; background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; -webkit-tap-highlight-color:transparent; }
+    html, body { margin:0; height:100%; overscroll-behavior:none; }
+  body { background:var(--bg); color:var(--text); font-family:'Inter',sans-serif; -webkit-tap-highlight-color:transparent; padding-top:env(safe-area-inset-top); padding-bottom:env(safe-area-inset-bottom); }
   h1,h2 { font-family:'Space Grotesk',sans-serif; margin:0; }
   .mono { font-family:'IBM Plex Mono',monospace; }
   .wrap { max-width:480px; margin:0 auto; padding-bottom:40px; }
